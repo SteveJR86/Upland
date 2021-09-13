@@ -64,7 +64,7 @@ def getNeighbourhoodProperties(headers, searchCity, searchNeighbourhood = None):
     properties = []
     for neighbourhoodPoly in neighbourhoodPolys:
         properties.append(checkInNeighbourhood(neighbourhoodPoly, getProperties(headers, neighbourhoodPoly)))
-    if not searchNeighbourhood:
+    if not searchNeighbourhood == None:
         properties = properties[0]
     return properties
 
