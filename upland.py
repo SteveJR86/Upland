@@ -146,7 +146,7 @@ def makeCanvas(objectsToPlot, mapHeight = 3000):
     heightRatio = mapHeight / (maxLong - minLong)
     widthRatio = mapWidth / (maxLat - minLat)
     mapFactor = min(heightRatio, widthRatio)
-    surface = cairo.ImageSurface(cairo.Format.ARGB32, int(mapWidth + 50), int(mapHeight + 150))
+    surface = cairo.ImageSurface(cairo.Format.ARGB32, int(mapWidth + 50), int(mapHeight + 200))
     canvas = cairo.Context(surface)
     canvas.set_source_rgb(1, 1, 1)
     canvas.paint()
@@ -158,9 +158,9 @@ def plotObject(canvas, mapFactor, objectToPlot, minLat, maxLong, fillColour = (1
         objectToPlot = objectToPlot[0]
     for num, point in enumerate(objectToPlot.exterior.coords):
         if num == 0:
-            canvas.move_to(((point[0] - minLat) * mapFactor), ((maxLong - point[1]) * mapFactor) + 100)
+            canvas.move_to(((point[0] - minLat) * mapFactor)+25, ((maxLong - point[1]) * mapFactor) + 75)
         else:
-            canvas.line_to(((point[0] - minLat) * mapFactor), ((maxLong - point[1]) * mapFactor) + 100)
+            canvas.line_to(((point[0] - minLat) * mapFactor)+25, ((maxLong - point[1]) * mapFactor) + 75)
     canvas.set_source_rgb(fillColour[0], fillColour[1], fillColour[2])
     canvas.close_path()
     canvas.fill_preserve()
