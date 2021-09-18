@@ -158,9 +158,9 @@ def plotObject(canvas, mapFactor, objectToPlot, minLat, maxLong, fillColour = (1
         objectToPlot = objectToPlot[0]
     for num, point in enumerate(objectToPlot.exterior.coords):
         if num == 0:
-            canvas.move_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + 75))
+            canvas.move_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + 100))
         else:
-            canvas.line_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + 75))
+            canvas.line_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + 100))
     canvas.set_source_rgb(fillColour[0], fillColour[1], fillColour[2])
     canvas.close_path()
     canvas.fill_preserve()
