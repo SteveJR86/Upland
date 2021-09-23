@@ -166,4 +166,15 @@ def plotObject(canvas, mapFactor, objectToPlot, minLat, maxLong, fillColour = (1
     canvas.fill_preserve()
     canvas.set_source_rgb(0, 0, 0)
     canvas.stroke()
+    for coords in objectToPlot.interiors:
+        for num, point in enumerate(coords.coords):
+            if num == 0:
+                canvas.move_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + 100))
+            else:
+                canvas.line_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + 100))
+        canvas.set_source_rgba(1, 1, 1, 0)
+        canvas.close_path()
+        canvas.fill_preserve()
+        canvas.set_source_rgb(0, 0, 0)
+        canvas.stroke()
     return
