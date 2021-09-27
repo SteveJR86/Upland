@@ -48,24 +48,21 @@ def getNeighbourhood(headers, searchCity, searchNeighbourhood = None):
 def getNeighbourhoodPoly(headers, searchCity, searchNeighbourhood = None):
     # function returns neighbourhood polygon as shapely polygon
     neighbourhoods = getNeighbourhood(headers, searchCity, searchNeighbourhood)
-    neighbourhoodPoly = []
+    neighbourhoodPolys = []
     if neighbourhoods == None:
-        neighbourhoodPoly = None
+        neighbourhoodPolys = None
     else:
         for neighbourhood in neighbourhoods:
-            try:
-                neighbourhoodPoly.append(Polygon(neighbourhood['boundaries']['coordinates'][0]))
-            except:
-                neighbourhoodPoly.append(Polygon(neighbourhood['boundaries']['coordinates'][0][0]))
-    return neighbourhoodPoly
+            neighbourhoodPolys.append(makePoly(neighbourhood['boundaries']))
+    return neighbourhoodPolys
 
 def getNeighbourhoodProperties(headers, searchCity, searchNeighbourhood = None):
     neighbourhoodPolys = getNeighbourhoodPoly(headers, searchCity, searchNeighbourhood)
     properties = []
     for neighbourhoodPoly in neighbourhoodPolys:
         properties.append(checkInNeighbourhood(neighbourhoodPoly, getProperties(headers, neighbourhoodPoly)))
-    if not searchNeighbourhood == None:
-        properties = properties[0]
+##    if not searchNeighbourhood == None:
+##        properties = properties[0]
     return properties
 
 def checkInNeighbourhood(searchPoly, properties):
@@ -87,6 +84,9 @@ def getProperties(headers, searchPoly):
                 except:
                     sleep(1)
                     tempProps = json.loads(requests.get('https://api.upland.me/map?north=' + str(north - ((north-south)/step)*nsstep) + '&south=' + str(north - ((north-south)/step)*(nsstep+1)) + '&east=' + str(east - ((east-west)/step)*ewstep) + '&west=' + str(east - ((east-west)/step)*(ewstep+1)) + '&marker=true', headers=headers).text)
+                else:
+                    sleep(10)
+                    tempProps = json.loads(requests.get('https://api.upland.me/map?north=' + str(north - ((north-south)/step)*nsstep) + '&south=' + str(north - ((north-south)/step)*(nsstep+1)) + '&east=' + str(east - ((east-west)/step)*ewstep) + '&west=' + str(east - ((east-west)/step)*(ewstep+1)) + '&marker=true', headers=headers).text)
                 properties.extend(tempProps)
         step = step*2
         if ((north-south)/step) < 0.0001:
@@ -94,9 +94,12 @@ def getProperties(headers, searchPoly):
     prop_ids = []
     uniqueProps = []
     for prop in properties:
-        if not prop['prop_id'] in prop_ids:
-            prop_ids.append(prop['prop_id'])
-            uniqueProps.append(prop)
+        try:
+            if not prop['prop_id'] in prop_ids:
+                prop_ids.append(prop['prop_id'])
+                uniqueProps.append(prop)
+        except:
+            print(prop.message)
     return uniqueProps
 
 def getPropertyDetails(headers, propID):
@@ -126,7 +129,14 @@ def matchCollections(headers, propID):
     return collections
 
 def getSaleProperties(headers, searchPoly):
-    saleProperties = json.loads(requests.get('https://api.upland.me/properties/list-view?north=' + str(searchPoly.bounds[3]) + '&south=' + str(searchPoly.bounds[1]) + '&east=' + str(searchPoly.bounds[2]) + '&west=' + str(searchPoly.bounds[0]) + '&offset=0&limit=20&sort=asc', headers=headers).text)
+    try:
+        saleProperties = json.loads(requests.get('https://api.upland.me/properties/list-view?north=' + str(searchPoly.bounds[3]) + '&south=' + str(searchPoly.bounds[1]) + '&east=' + str(searchPoly.bounds[2]) + '&west=' + str(searchPoly.bounds[0]) + '&offset=0&limit=20&sort=asc', headers=headers).text)
+    except:
+        sleep(1)
+        saleProperties = json.loads(requests.get('https://api.upland.me/properties/list-view?north=' + str(searchPoly.bounds[3]) + '&south=' + str(searchPoly.bounds[1]) + '&east=' + str(searchPoly.bounds[2]) + '&west=' + str(searchPoly.bounds[0]) + '&offset=0&limit=20&sort=asc', headers=headers).text)
+    else:
+        sleep(10)
+        saleProperties = json.loads(requests.get('https://api.upland.me/properties/list-view?north=' + str(searchPoly.bounds[3]) + '&south=' + str(searchPoly.bounds[1]) + '&east=' + str(searchPoly.bounds[2]) + '&west=' + str(searchPoly.bounds[0]) + '&offset=0&limit=20&sort=asc', headers=headers).text)
     return saleProperties
 
 def makeCanvas(objectsToPlot, mapHeight = 3000):
@@ -163,18 +173,31 @@ def plotObject(canvas, mapFactor, objectToPlot, minLat, maxLong, fillColour = (1
             canvas.line_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + 100))
     canvas.set_source_rgb(fillColour[0], fillColour[1], fillColour[2])
     canvas.close_path()
-    canvas.fill_preserve()
-    canvas.set_source_rgb(0, 0, 0)
-    canvas.stroke()
     for coords in objectToPlot.interiors:
         for num, point in enumerate(coords.coords):
             if num == 0:
                 canvas.move_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + 100))
             else:
                 canvas.line_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + 100))
-        canvas.set_source_rgba(1, 1, 1, 0)
         canvas.close_path()
-        canvas.fill_preserve()
-        canvas.set_source_rgb(0, 0, 0)
-        canvas.stroke()
+    canvas.set_fill_rule(cairo.FILL_RULE_EVEN_ODD)
+    canvas.fill_preserve()
+    canvas.set_source_rgb(0, 0, 0)
+    canvas.stroke()
     return
+
+def makePoly(boundaries):
+    # function takes boundaries either dictionary or string and converts to
+    # dictionary if needed then checks if polygon or multi polygon in ['type']
+    # before making a suitable polygon/multipolygon from ['coordinates']
+    if not type(boundaries) == dict:
+        boundaries = json.loads(boundaries)
+    if boundaries['type'] == 'Polygon':
+        if len(boundaries['coordinates']) == 1:
+            poly = Polygon(boundaries['coordinates'][0])
+        else:
+            poly = Polygon(boundaries['coordinates'][0], (((boundaries['coordinates'][1])), ))
+    else:
+        print(boundaries['type'])
+        poly = None
+    return poly
