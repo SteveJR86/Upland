@@ -1,6 +1,7 @@
 import json
 import requests
 from shapely.geometry import Polygon
+from shapely.geometry import MultiPolygon
 from shapely.geometry import Point
 import cairo
 from time import sleep
@@ -61,8 +62,8 @@ def getNeighbourhoodProperties(headers, searchCity, searchNeighbourhood = None):
     properties = []
     for neighbourhoodPoly in neighbourhoodPolys:
         properties.append(checkInNeighbourhood(neighbourhoodPoly, getProperties(headers, neighbourhoodPoly)))
-##    if not searchNeighbourhood == None:
-##        properties = properties[0]
+    if not searchNeighbourhood == None:
+        properties = properties[0]
     return properties
 
 def checkInNeighbourhood(searchPoly, properties):
@@ -99,7 +100,7 @@ def getProperties(headers, searchPoly):
                 prop_ids.append(prop['prop_id'])
                 uniqueProps.append(prop)
         except:
-            print(prop.message)
+            print(prop.values())
     return uniqueProps
 
 def getPropertyDetails(headers, propID):
@@ -166,24 +167,48 @@ def makeCanvas(objectsToPlot, mapHeight = 3000):
 def plotObject(canvas, mapFactor, objectToPlot, minLat, maxLong, fillColour = (1, 1, 1)):
     if type(objectToPlot) == list:
         objectToPlot = objectToPlot[0]
-    for num, point in enumerate(objectToPlot.exterior.coords):
-        if num == 0:
-            canvas.move_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + 100))
-        else:
-            canvas.line_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + 100))
-    canvas.set_source_rgb(fillColour[0], fillColour[1], fillColour[2])
-    canvas.close_path()
-    for coords in objectToPlot.interiors:
-        for num, point in enumerate(coords.coords):
-            if num == 0:
-                canvas.move_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + 100))
-            else:
-                canvas.line_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + 100))
-        canvas.close_path()
-    canvas.set_fill_rule(cairo.FILL_RULE_EVEN_ODD)
-    canvas.fill_preserve()
-    canvas.set_source_rgb(0, 0, 0)
-    canvas.stroke()
+    if isinstance(objectToPlot, MultiPolygon):
+        for poly in objectToPlot:
+            for num, point in enumerate(poly.exterior.coords):
+                if num == 0:
+                    canvas.move_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + 100))
+                else:
+                    canvas.line_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + 100))
+            canvas.set_source_rgb(fillColour[0], fillColour[1], fillColour[2])
+            canvas.close_path()
+            for coords in poly.interiors:
+                for num, point in enumerate(coords.coords):
+                    if num == 0:
+                        canvas.move_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + 100))
+                    else:
+                        canvas.line_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + 100))
+                canvas.close_path()
+            canvas.set_fill_rule(cairo.FILL_RULE_EVEN_ODD)
+            canvas.fill_preserve()
+            canvas.set_source_rgb(0, 0, 0)
+            canvas.stroke()
+    else:
+        try:
+            for num, point in enumerate(objectToPlot.exterior.coords):
+                if num == 0:
+                    canvas.move_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + 100))
+                else:
+                    canvas.line_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + 100))
+            canvas.set_source_rgb(fillColour[0], fillColour[1], fillColour[2])
+            canvas.close_path()
+            for coords in objectToPlot.interiors:
+                for num, point in enumerate(coords.coords):
+                    if num == 0:
+                        canvas.move_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + 100))
+                    else:
+                        canvas.line_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + 100))
+                canvas.close_path()
+            canvas.set_fill_rule(cairo.FILL_RULE_EVEN_ODD)
+            canvas.fill_preserve()
+            canvas.set_source_rgb(0, 0, 0)
+            canvas.stroke()
+        except:
+            print(objectToPlot)
     return
 
 def makePoly(boundaries):
@@ -197,7 +222,14 @@ def makePoly(boundaries):
             poly = Polygon(boundaries['coordinates'][0])
         else:
             poly = Polygon(boundaries['coordinates'][0], (((boundaries['coordinates'][1])), ))
+    elif boundaries['type'] == 'MultiPolygon':
+        tempPolys = []
+        for polyCoords in boundaries['coordinates']:
+            if len(polyCoords) == 1:
+                tempPolys.append(Polygon(polyCoords[0]))
+            else:
+                tempPolys.append(Polygon(polyCoords[0], (((polyCoords[1])), )))
+        poly = MultiPolygon(tempPolys)
     else:
-        print(boundaries['type'])
         poly = None
     return poly
