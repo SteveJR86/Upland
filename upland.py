@@ -19,7 +19,7 @@ def getNeighbourhoods(headers):
     return neighbourhoods
 
 def getNeighbourhood(headers, searchCity, searchNeighbourhood = None):
-    # function returns specific neighbourhood as list based on a search neighbourhood and search city
+    # function returns specific neighbourhoods as list based on a search city and search neighbourhood
     result = []
     if type(searchNeighbourhood) == dict:
         searchNeighbourhood = searchNeighbourhood['name'].upper()
@@ -47,7 +47,7 @@ def getNeighbourhood(headers, searchCity, searchNeighbourhood = None):
     return result
 
 def getNeighbourhoodPoly(headers, searchCity, searchNeighbourhood = None):
-    # function returns neighbourhood polygon as shapely polygon
+    # function returns neighbourhood polygons as list of shapely polygons
     neighbourhoods = getNeighbourhood(headers, searchCity, searchNeighbourhood)
     neighbourhoodPolys = []
     if neighbourhoods == None:
@@ -57,27 +57,29 @@ def getNeighbourhoodPoly(headers, searchCity, searchNeighbourhood = None):
             neighbourhoodPolys.append(makePoly(neighbourhood['boundaries']))
     return neighbourhoodPolys
 
-def getNeighbourhoodProperties(headers, searchCity, searchNeighbourhood = None):
+def getNeighbourhoodProperties(headers, searchCity, searchNeighbourhood = None, models = False):
+    # returns list of lists (one per neighbourhood) of properties
     neighbourhoodPolys = getNeighbourhoodPoly(headers, searchCity, searchNeighbourhood)
     properties = []
     for neighbourhoodPoly in neighbourhoodPolys:
-        properties.append(checkInNeighbourhood(neighbourhoodPoly, getProperties(headers, neighbourhoodPoly)))
-    if not searchNeighbourhood == None:
-        properties = properties[0]
+        properties.append(checkInNeighbourhood(neighbourhoodPoly, getProperties(headers, neighbourhoodPoly, models)))
     return properties
 
 def checkInNeighbourhood(searchPoly, properties):
     properties[:] = [x for x in properties if Point(float(x['centerlng']), float(x['centerlat'])).within(searchPoly)]
     return properties
 
-def getProperties(headers, searchPoly):
+def getProperties(headers, searchPoly, models = False):
     properties = []
     north = searchPoly.bounds[3]
     south = searchPoly.bounds[1]
     east = searchPoly.bounds[2]
     west = searchPoly.bounds[0]
     step = 1
-    while len(properties)==0 and step < (2**4):
+    maxStepSize = 0.01
+    runFlag = True
+    while runFlag:
+        properties = []
         for nsstep in range(0, step):
             for ewstep in range(0, step):
                 try:
@@ -89,9 +91,12 @@ def getProperties(headers, searchPoly):
                     sleep(10)
                     tempProps = json.loads(requests.get('https://api.upland.me/map?north=' + str(north - ((north-south)/step)*nsstep) + '&south=' + str(north - ((north-south)/step)*(nsstep+1)) + '&east=' + str(east - ((east-west)/step)*ewstep) + '&west=' + str(east - ((east-west)/step)*(ewstep+1)) + '&marker=true', headers=headers).text)
                 properties.extend(tempProps)
+        if models and ((north-south)/step) < (maxStepSize):
+            runFlag = False
+        elif models == False and (((north-south)/step) < maxStepSize or len(properties) != 0):
+            runFlag = False
         step = step*2
-        if ((north-south)/step) < 0.0001:
-            step = 2**5
+        
     prop_ids = []
     uniqueProps = []
     for prop in properties:
@@ -100,10 +105,11 @@ def getProperties(headers, searchPoly):
                 prop_ids.append(prop['prop_id'])
                 uniqueProps.append(prop)
         except:
-            print(prop.values())
+            print(prop)
     return uniqueProps
 
 def getPropertyDetails(headers, propID):
+    # retrieves specific property details from Upland API
     try:
         propDetails = json.loads(requests.get('https://api.upland.me/properties/' + str(propID), headers=headers).text)
     except:
@@ -115,6 +121,7 @@ def getPropertyDetails(headers, propID):
     return propDetails
 
 def matchCollections(headers, propID):
+    # returns collections that a specific property can be part of from Upland API
     try:
         collectionRaw = requests.get('https://api.upland.me/properties/match/' + str(propID), headers=headers).text
     except:
@@ -130,6 +137,7 @@ def matchCollections(headers, propID):
     return collections
 
 def getSaleProperties(headers, searchPoly):
+    # returns properties that are for sale within a polygon search area
     try:
         saleProperties = json.loads(requests.get('https://api.upland.me/properties/list-view?north=' + str(searchPoly.bounds[3]) + '&south=' + str(searchPoly.bounds[1]) + '&east=' + str(searchPoly.bounds[2]) + '&west=' + str(searchPoly.bounds[0]) + '&offset=0&limit=20&sort=asc', headers=headers).text)
     except:
@@ -141,6 +149,8 @@ def getSaleProperties(headers, searchPoly):
     return saleProperties
 
 def makeCanvas(objectsToPlot, mapHeight = 3000):
+    # creates a cairo canvas 200pixels taller and 50 pixels wider than the extent of the objects to plot on the canvas
+    # allowing space for two lines of text at the top of the image
     minLat = 1000
     maxLat = -1000
     minLong = 1000
@@ -164,24 +174,25 @@ def makeCanvas(objectsToPlot, mapHeight = 3000):
     canvas.set_source_rgb(0, 0, 0)
     return (surface, canvas, mapFactor, minLat, maxLong, mapWidth)
 
-def plotObject(canvas, mapFactor, objectToPlot, minLat, maxLong, fillColour = (1, 1, 1)):
+def plotObject(canvas, mapFactor, objectToPlot, minLat, maxLong, fillColour = (1, 1, 1), heightoffset = 200, widthoffset = 25):
+    # plot shapely Polygon/MultiPolygon to cairo canvas and extracts polygon if its in a list
     if type(objectToPlot) == list:
         objectToPlot = objectToPlot[0]
     if isinstance(objectToPlot, MultiPolygon):
         for poly in objectToPlot:
             for num, point in enumerate(poly.exterior.coords):
                 if num == 0:
-                    canvas.move_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + 100))
+                    canvas.move_to((((point[0] - minLat) * mapFactor) + widthoffset), (((maxLong - point[1]) * mapFactor) + heightoffset))
                 else:
-                    canvas.line_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + 100))
+                    canvas.line_to((((point[0] - minLat) * mapFactor) + widthoffset), (((maxLong - point[1]) * mapFactor) + heightoffset))
             canvas.set_source_rgb(fillColour[0], fillColour[1], fillColour[2])
             canvas.close_path()
             for coords in poly.interiors:
                 for num, point in enumerate(coords.coords):
                     if num == 0:
-                        canvas.move_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + 100))
+                        canvas.move_to((((point[0] - minLat) * mapFactor)+ widthoffset), (((maxLong - point[1]) * mapFactor) + heightoffset))
                     else:
-                        canvas.line_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + 100))
+                        canvas.line_to((((point[0] - minLat) * mapFactor) + widthoffset), (((maxLong - point[1]) * mapFactor) + heightoffset))
                 canvas.close_path()
             canvas.set_fill_rule(cairo.FILL_RULE_EVEN_ODD)
             canvas.fill_preserve()
@@ -191,17 +202,17 @@ def plotObject(canvas, mapFactor, objectToPlot, minLat, maxLong, fillColour = (1
         try:
             for num, point in enumerate(objectToPlot.exterior.coords):
                 if num == 0:
-                    canvas.move_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + 100))
+                    canvas.move_to((((point[0] - minLat) * mapFactor) + widthoffset), (((maxLong - point[1]) * mapFactor) + heightoffset))
                 else:
-                    canvas.line_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + 100))
+                    canvas.line_to((((point[0] - minLat) * mapFactor) + widthoffset), (((maxLong - point[1]) * mapFactor) + heightoffset))
             canvas.set_source_rgb(fillColour[0], fillColour[1], fillColour[2])
             canvas.close_path()
             for coords in objectToPlot.interiors:
                 for num, point in enumerate(coords.coords):
                     if num == 0:
-                        canvas.move_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + 100))
+                        canvas.move_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + heightoffset))
                     else:
-                        canvas.line_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + 100))
+                        canvas.line_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + heightoffset))
                 canvas.close_path()
             canvas.set_fill_rule(cairo.FILL_RULE_EVEN_ODD)
             canvas.fill_preserve()
