@@ -1,3 +1,4 @@
+from shapely.geometry import Point, Polygon, MultiPolygon
 import cairo
 
 def makeCanvas(objectsToPlot, mapHeight = 3000):
