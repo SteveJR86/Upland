@@ -147,7 +147,6 @@ def getSaleProperties(headers, searchPoly):
         saleProperties = json.loads(requests.get('https://api.upland.me/properties/list-view?north=' + str(searchPoly.bounds[3]) + '&south=' + str(searchPoly.bounds[1]) + '&east=' + str(searchPoly.bounds[2]) + '&west=' + str(searchPoly.bounds[0]) + '&offset=0&limit=20&sort=asc', headers=headers).text)
     return saleProperties
 
-
 def makePoly(boundaries):
     # function takes boundaries either dictionary or string and converts to
     # dictionary if needed then checks if polygon or multi polygon in ['type']
