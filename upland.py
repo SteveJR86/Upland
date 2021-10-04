@@ -53,7 +53,8 @@ def getNeighbourhoodPoly(headers, searchCity, searchNeighbourhood = None):
         neighbourhoodPolys = None
     else:
         for neighbourhood in neighbourhoods:
-            neighbourhoodPolys.append(makePoly(neighbourhood['boundaries']))
+            if neighbourhood['boundaries']:
+                neighbourhoodPolys.append(makePoly(neighbourhood['boundaries']))
     return neighbourhoodPolys
 
 def getNeighbourhoodProperties(headers, searchCity, searchNeighbourhood = None, models = False):
@@ -104,7 +105,7 @@ def getProperties(headers, searchPoly, models = False):
                 prop_ids.append(prop['prop_id'])
                 uniqueProps.append(prop)
         except:
-            print(prop)
+            print(prop.message())
     return uniqueProps
 
 def getPropertyDetails(headers, propID):
@@ -153,7 +154,10 @@ def makePoly(boundaries):
     # dictionary if needed then checks if polygon or multi polygon in ['type']
     # before making a suitable polygon/multipolygon from ['coordinates']
     if not type(boundaries) == dict:
-        boundaries = json.loads(boundaries)
+        try:
+            boundaries = json.loads(boundaries)
+        except:
+            boundaries = {'type': None}
     if boundaries['type'] == 'Polygon':
         if len(boundaries['coordinates']) == 1:
             poly = Polygon(boundaries['coordinates'][0])
