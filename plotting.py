@@ -39,19 +39,19 @@ def plotObject(canvas, mapFactor, objectToPlot, minLat, maxLong, fillColour = (1
           canvas.move_to((((point[0] - minLat) * mapFactor) + widthoffset), (((maxLong - point[1]) * mapFactor) + heightoffset))
         else:
           canvas.line_to((((point[0] - minLat) * mapFactor) + widthoffset), (((maxLong - point[1]) * mapFactor) + heightoffset))
-          canvas.set_source_rgb(fillColour[0], fillColour[1], fillColour[2])
-          canvas.close_path()
+      canvas.set_source_rgb(fillColour[0], fillColour[1], fillColour[2])
+      canvas.close_path()
       for coords in poly.interiors:
         for num, point in enumerate(coords.coords):
           if num == 0:
             canvas.move_to((((point[0] - minLat) * mapFactor)+ widthoffset), (((maxLong - point[1]) * mapFactor) + heightoffset))
           else:
             canvas.line_to((((point[0] - minLat) * mapFactor) + widthoffset), (((maxLong - point[1]) * mapFactor) + heightoffset))
-          canvas.close_path()
-          canvas.set_fill_rule(cairo.FILL_RULE_EVEN_ODD)
-          canvas.fill_preserve()
-          canvas.set_source_rgb(0, 0, 0)
-          canvas.stroke()
+      canvas.close_path()
+      canvas.set_fill_rule(cairo.FILL_RULE_EVEN_ODD)
+      canvas.fill_preserve()
+      canvas.set_source_rgb(0, 0, 0)
+      canvas.stroke()
   elif isinstance(objectToPlot, Polygon):
     for num, point in enumerate(objectToPlot.exterior.coords):
       if num == 0:
@@ -66,11 +66,11 @@ def plotObject(canvas, mapFactor, objectToPlot, minLat, maxLong, fillColour = (1
           canvas.move_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + heightoffset))
         else:
           canvas.line_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + heightoffset))
-        canvas.close_path()
-        canvas.set_fill_rule(cairo.FILL_RULE_EVEN_ODD)
-        canvas.fill_preserve()
-        canvas.set_source_rgb(0, 0, 0)
-        canvas.stroke()
+      canvas.close_path()
+    canvas.set_fill_rule(cairo.FILL_RULE_EVEN_ODD)
+    canvas.fill_preserve()
+    canvas.set_source_rgb(0, 0, 0)
+    canvas.stroke()
   else:
     print(objectToPlot)
   return
