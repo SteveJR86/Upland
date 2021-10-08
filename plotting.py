@@ -21,12 +21,34 @@ def makeCanvas(objectsToPlot, mapHeight = 3000):
   heightRatio = mapHeight / (maxLong - minLong)
   widthRatio = mapWidth / (maxLat - minLat)
   mapFactor = min(heightRatio, widthRatio)
-  surface = cairo.ImageSurface(cairo.Format.ARGB32, int(mapWidth + 50), int(mapHeight + 200))
+  surface = cairo.ImageSurface(cairo.Format.ARGB32, int(mapWidth + 50), int(mapHeight + 225))
   canvas = cairo.Context(surface)
   canvas.set_source_rgb(1, 1, 1)
   canvas.paint()
   canvas.set_source_rgb(0, 0, 0)
   return (surface, canvas, mapFactor, minLat, maxLong, mapWidth)
+
+def plotKey(canvas, surface, keyFile, position):
+  height = surface.get_height()
+  width = surface.get_width()
+  if position == "TopRight":
+    xLocation = width - 542
+    yLocation = 225
+  elif position == "TopLeft":
+    xLocation = 25
+    yLocation = 225
+  elif position == "BottomRight":
+    xLocation = width - 542
+    yLocation = height - 460
+  elif position == "BottomLeft":
+    xLocation = 25
+    yLocation = height - 460
+  keyToPlot = cairo.ImageSurface.create_from_png(keyFile)
+  canvas.set_source_surface(keyToPlot, xLocation, yLocation)
+  canvas.paint()
+  canvas.set_source_rgb(0, 0, 0)
+
+  return
 
 def plotObject(canvas, mapFactor, objectToPlot, minLat, maxLong, fillColour = (1, 1, 1), heightoffset = 200, widthoffset = 25):
   # plot shapely Polygon/MultiPolygon to cairo canvas and extracts polygon if its in a list
