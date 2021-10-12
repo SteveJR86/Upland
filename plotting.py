@@ -26,11 +26,17 @@ def makeCanvas(objectsToPlot, mapHeight = 3000):
   canvas.set_source_rgb(1, 1, 1)
   canvas.paint()
   canvas.set_source_rgb(0, 0, 0)
+  canvas.set_font_size(50)
+  canvas.move_to(75, mapWidth - 100)
+  canvas.show_text("Map created by Steve (sjr86)")
   return (surface, canvas, mapFactor, minLat, maxLong, mapWidth)
 
 def plotKey(canvas, surface, keyFile, position):
   height = surface.get_height()
   width = surface.get_width()
+  keyToPlot = cairo.ImageSurface.create_from_png(keyFile)
+  keyWidth = keyToPlot.get_width()
+  keyHeight = keyToPlot.get_height()
   if position == "TopRight":
     xLocation = width - 542
     yLocation = 225
@@ -43,7 +49,7 @@ def plotKey(canvas, surface, keyFile, position):
   elif position == "BottomLeft":
     xLocation = 25
     yLocation = height - 460
-  keyToPlot = cairo.ImageSurface.create_from_png(keyFile)
+  
   canvas.set_source_surface(keyToPlot, xLocation, yLocation)
   canvas.paint()
   canvas.set_source_rgb(0, 0, 0)
