@@ -99,10 +99,13 @@ def getProperties(headers, searchPoly, models = False):
         
     prop_ids = []
     uniqueProps = []
-    for prop in properties:
-        if not prop['prop_id'] in prop_ids:
-            prop_ids.append(prop['prop_id'])
-            uniqueProps.append(prop)
+    try:
+        for prop in properties:
+            if not prop['prop_id'] in prop_ids:
+                prop_ids.append(prop['prop_id'])
+                uniqueProps.append(prop)
+    except:
+        print(properties)
     return uniqueProps
 
 def getPropertyDetails(headers, propID):
