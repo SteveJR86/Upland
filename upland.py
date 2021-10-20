@@ -10,11 +10,12 @@ def getNeighbourhoods(headers):
     try:
         neighbourhoods = json.loads(requests.get('https://api.upland.me/neighborhood', headers=headers).text)
     except:
-        sleep(1)
-        neighbourhoods = json.loads(requests.get('https://api.upland.me/neighborhood', headers=headers).text)
-    else:
-        sleep(10)
-        neighbourhoods = json.loads(requests.get('https://api.upland.me/neighborhood', headers=headers).text)
+        try:
+            sleep(1)
+            neighbourhoods = json.loads(requests.get('https://api.upland.me/neighborhood', headers=headers).text)
+        except:
+            sleep(10)
+            neighbourhoods = json.loads(requests.get('https://api.upland.me/neighborhood', headers=headers).text)
     return neighbourhoods
 
 def getNeighbourhood(headers, searchCity, searchNeighbourhood = None):
@@ -28,11 +29,12 @@ def getNeighbourhood(headers, searchCity, searchNeighbourhood = None):
     try:
         cities = json.loads(requests.get('https://api.upland.me/city', headers=headers).text)
     except:
-        sleep(1)
-        cities = json.loads(requests.get('https://api.upland.me/city', headers=headers).text)
-    else:
-        sleep(10)
-        cities = json.loads(requests.get('https://api.upland.me/city', headers=headers).text)
+        try:
+            sleep(1)
+            cities = json.loads(requests.get('https://api.upland.me/city', headers=headers).text)
+        except:
+            sleep(10)
+            cities = json.loads(requests.get('https://api.upland.me/city', headers=headers).text)
     for city in cities:
         if searchCity == city['name']:
             cityID = city['id']
@@ -66,7 +68,10 @@ def getNeighbourhoodProperties(headers, searchCity, searchNeighbourhood = None, 
     return properties
 
 def checkInNeighbourhood(searchPoly, properties):
-    properties[:] = [x for x in properties if Point(float(x['centerlng']), float(x['centerlat'])).within(searchPoly)]
+    try:
+        properties[:] = [x for x in properties if Point(float(x['centerlng']), float(x['centerlat'])).within(searchPoly)]
+    except:
+        properties = [0]
     return properties
 
 def getProperties(headers, searchPoly, models = False):
@@ -85,11 +90,12 @@ def getProperties(headers, searchPoly, models = False):
                 try:
                     tempProps = json.loads(requests.get('https://api.upland.me/map?north=' + str(north - ((north-south)/step)*nsstep) + '&south=' + str(north - ((north-south)/step)*(nsstep+1)) + '&east=' + str(east - ((east-west)/step)*ewstep) + '&west=' + str(east - ((east-west)/step)*(ewstep+1)) + '&marker=true', headers=headers).text)
                 except:
-                    sleep(1)
-                    tempProps = json.loads(requests.get('https://api.upland.me/map?north=' + str(north - ((north-south)/step)*nsstep) + '&south=' + str(north - ((north-south)/step)*(nsstep+1)) + '&east=' + str(east - ((east-west)/step)*ewstep) + '&west=' + str(east - ((east-west)/step)*(ewstep+1)) + '&marker=true', headers=headers).text)
-                else:
-                    sleep(10)
-                    tempProps = json.loads(requests.get('https://api.upland.me/map?north=' + str(north - ((north-south)/step)*nsstep) + '&south=' + str(north - ((north-south)/step)*(nsstep+1)) + '&east=' + str(east - ((east-west)/step)*ewstep) + '&west=' + str(east - ((east-west)/step)*(ewstep+1)) + '&marker=true', headers=headers).text)
+                    try:
+                        sleep(1)
+                        tempProps = json.loads(requests.get('https://api.upland.me/map?north=' + str(north - ((north-south)/step)*nsstep) + '&south=' + str(north - ((north-south)/step)*(nsstep+1)) + '&east=' + str(east - ((east-west)/step)*ewstep) + '&west=' + str(east - ((east-west)/step)*(ewstep+1)) + '&marker=true', headers=headers).text)
+                    except:
+                        sleep(10)
+                        tempProps = json.loads(requests.get('https://api.upland.me/map?north=' + str(north - ((north-south)/step)*nsstep) + '&south=' + str(north - ((north-south)/step)*(nsstep+1)) + '&east=' + str(east - ((east-west)/step)*ewstep) + '&west=' + str(east - ((east-west)/step)*(ewstep+1)) + '&marker=true', headers=headers).text)
                 properties.extend(tempProps)
         if models and ((north-south)/step) < (maxStepSize):
             runFlag = False
@@ -105,7 +111,7 @@ def getProperties(headers, searchPoly, models = False):
                 prop_ids.append(prop['prop_id'])
                 uniqueProps.append(prop)
     except:
-        print(properties)
+        uniqueProps = getProperties(headers, searchPoly, models)
     return uniqueProps
 
 def getPropertyDetails(headers, propID):
@@ -113,11 +119,12 @@ def getPropertyDetails(headers, propID):
     try:
         propDetails = json.loads(requests.get('https://api.upland.me/properties/' + str(propID), headers=headers).text)
     except:
-        sleep(1)
-        propDetails = json.loads(requests.get('https://api.upland.me/properties/' + str(propID), headers=headers).text)
-    else:
-        sleep(10)
-        propDetails = json.loads(requests.get('https://api.upland.me/properties/' + str(propID), headers=headers).text)
+        try:
+            sleep(1)
+            propDetails = json.loads(requests.get('https://api.upland.me/properties/' + str(propID), headers=headers).text)
+        except:
+            sleep(10)
+            propDetails = json.loads(requests.get('https://api.upland.me/properties/' + str(propID), headers=headers).text)
     return propDetails
 
 def matchCollections(headers, propID):
@@ -125,11 +132,12 @@ def matchCollections(headers, propID):
     try:
         collectionRaw = requests.get('https://api.upland.me/properties/match/' + str(propID), headers=headers).text
     except:
-        sleep(1)
-        collectionRaw = requests.get('https://api.upland.me/properties/match/' + str(propID), headers=headers).text
-    else:
-        sleep(10)
-        collectionRaw = requests.get('https://api.upland.me/properties/match/' + str(propID), headers=headers).text
+        try:
+            sleep(1)
+            collectionRaw = requests.get('https://api.upland.me/properties/match/' + str(propID), headers=headers).text
+        except:
+            sleep(10)
+            collectionRaw = requests.get('https://api.upland.me/properties/match/' + str(propID), headers=headers).text
     try:
         collections = json.loads(collectionRaw)
     except:
@@ -141,11 +149,12 @@ def getSaleProperties(headers, searchPoly):
     try:
         saleProperties = json.loads(requests.get('https://api.upland.me/properties/list-view?north=' + str(searchPoly.bounds[3]) + '&south=' + str(searchPoly.bounds[1]) + '&east=' + str(searchPoly.bounds[2]) + '&west=' + str(searchPoly.bounds[0]) + '&offset=0&limit=20&sort=asc', headers=headers).text)
     except:
-        sleep(1)
-        saleProperties = json.loads(requests.get('https://api.upland.me/properties/list-view?north=' + str(searchPoly.bounds[3]) + '&south=' + str(searchPoly.bounds[1]) + '&east=' + str(searchPoly.bounds[2]) + '&west=' + str(searchPoly.bounds[0]) + '&offset=0&limit=20&sort=asc', headers=headers).text)
-    else:
-        sleep(10)
-        saleProperties = json.loads(requests.get('https://api.upland.me/properties/list-view?north=' + str(searchPoly.bounds[3]) + '&south=' + str(searchPoly.bounds[1]) + '&east=' + str(searchPoly.bounds[2]) + '&west=' + str(searchPoly.bounds[0]) + '&offset=0&limit=20&sort=asc', headers=headers).text)
+        try:
+            sleep(1)
+            saleProperties = json.loads(requests.get('https://api.upland.me/properties/list-view?north=' + str(searchPoly.bounds[3]) + '&south=' + str(searchPoly.bounds[1]) + '&east=' + str(searchPoly.bounds[2]) + '&west=' + str(searchPoly.bounds[0]) + '&offset=0&limit=20&sort=asc', headers=headers).text)
+        except:
+            sleep(10)
+            saleProperties = json.loads(requests.get('https://api.upland.me/properties/list-view?north=' + str(searchPoly.bounds[3]) + '&south=' + str(searchPoly.bounds[1]) + '&east=' + str(searchPoly.bounds[2]) + '&west=' + str(searchPoly.bounds[0]) + '&offset=0&limit=20&sort=asc', headers=headers).text)
     return saleProperties
 
 

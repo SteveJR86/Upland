@@ -27,7 +27,7 @@ def makeCanvas(objectsToPlot, mapHeight = 3000):
   canvas.paint()
   canvas.set_source_rgb(0, 0, 0)
   canvas.set_font_size(50)
-  canvas.move_to((mapWidth - 200), 75)
+  canvas.move_to((mapWidth - 600), 75)
   canvas.show_text("Map created by Steve (sjr86)")
   return (surface, canvas, mapFactor, minLat, maxLong, mapWidth)
 
