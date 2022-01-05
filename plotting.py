@@ -1,5 +1,6 @@
 from shapely.geometry import Point, Polygon, MultiPolygon
 import cairo
+import math
 
 def makeCanvas(objectsToPlot, mapHeight = 3000):
   # creates a cairo canvas 200pixels taller and 50 pixels wider than the extent of the objects to plot on the canvas
@@ -91,9 +92,9 @@ def plotObject(canvas, mapFactor, objectToPlot, minLat, maxLong, fillColour = (1
     for coords in objectToPlot.interiors:
       for num, point in enumerate(coords.coords):
         if num == 0:
-          canvas.move_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + heightoffset))
+          canvas.move_to(((point[0] - minLat) * mapFactor) + widthoffset, (((maxLong - point[1]) * mapFactor) + heightoffset))
         else:
-          canvas.line_to(((point[0] - minLat) * mapFactor)+25, (((maxLong - point[1]) * mapFactor) + heightoffset))
+          canvas.line_to(((point[0] - minLat) * mapFactor) + widthoffset, (((maxLong - point[1]) * mapFactor) + heightoffset))
       canvas.close_path()
     canvas.set_fill_rule(cairo.FILL_RULE_EVEN_ODD)
     canvas.fill_preserve()
@@ -101,4 +102,15 @@ def plotObject(canvas, mapFactor, objectToPlot, minLat, maxLong, fillColour = (1
     canvas.stroke()
   else:
     print(objectToPlot)
+  return
+
+def plotCircle(canvas, surface, mapFactor, radius, minLat, maxLong, fillColour = (1, 1, 1, 1), heightoffset = 200, widthoffset = 25):
+  height = surface.get_height()
+  width = surface.get_width()
+  canvas.arc(width / 2, height / 2, (radius / 111139) * mapFactor, 0, 2*math.pi)
+  canvas.set_source_rgba(fillColour[0], fillColour[1], fillColour[2], fillColour[3])
+  canvas.fill_preserve()
+  canvas.set_source_rgba(0, 0, 0, 1)
+  canvas.stroke()
+
   return

@@ -56,7 +56,12 @@ def getNeighbourhoodPoly(headers, searchCity, searchNeighbourhood = None):
     else:
         for neighbourhood in neighbourhoods:
             if neighbourhood['boundaries']:
-                neighbourhoodPolys.append(makePoly(neighbourhood['boundaries']))
+                if neighbourhood['name'] == 'CHABOT PARK':
+                    print("Chabot Park")
+                    print(len([neighbourhood['boundaries']['coordinates'][0]]))
+                    neighbourhoodPolys.append(makePoly({'type': 'Polygon', 'coordinates': [neighbourhood['boundaries']['coordinates'][0]]}))
+                else:
+                    neighbourhoodPolys.append(makePoly(neighbourhood['boundaries']))
     return neighbourhoodPolys
 
 def getNeighbourhoodProperties(headers, searchCity, searchNeighbourhood = None, models = False):
@@ -68,10 +73,7 @@ def getNeighbourhoodProperties(headers, searchCity, searchNeighbourhood = None, 
     return properties
 
 def checkInNeighbourhood(searchPoly, properties):
-    try:
-        properties[:] = [x for x in properties if Point(float(x['centerlng']), float(x['centerlat'])).within(searchPoly)]
-    except:
-        properties = [0]
+    properties[:] = [x for x in properties if Point(float(x['centerlng']), float(x['centerlat'])).within(searchPoly)]            
     return properties
 
 def getProperties(headers, searchPoly, models = False):
