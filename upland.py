@@ -159,6 +159,13 @@ def getSaleProperties(headers, searchPoly):
             saleProperties = json.loads(requests.get('https://api.upland.me/properties/list-view?north=' + str(searchPoly.bounds[3]) + '&south=' + str(searchPoly.bounds[1]) + '&east=' + str(searchPoly.bounds[2]) + '&west=' + str(searchPoly.bounds[0]) + '&offset=0&limit=20&sort=asc', headers=headers).text)
     return saleProperties
 
+def getBuildings(headers, propID):
+
+    try:
+        buildList = json.loads(requests.get(f'https://business.upland.me/models/available-for-building/{propID}', headers=headers).text)
+    except:
+        buildList = None
+    return buildList
 
 def makePoly(boundaries):
     # function takes boundaries either dictionary or string and converts to

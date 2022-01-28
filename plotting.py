@@ -1,6 +1,7 @@
 from shapely.geometry import Point, Polygon, MultiPolygon
 import cairo
 import math
+from datetime import date
 
 def makeCanvas(objectsToPlot, mapHeight = 3000):
   # creates a cairo canvas 200pixels taller and 50 pixels wider than the extent of the objects to plot on the canvas
@@ -9,6 +10,8 @@ def makeCanvas(objectsToPlot, mapHeight = 3000):
   maxLat = -1000
   minLong = 1000
   maxLong = -1000
+  today = date.today()
+  todayFormat = today.strftime('%d/%b/%y')
 
   for x in objectsToPlot:
     if x:
@@ -30,6 +33,8 @@ def makeCanvas(objectsToPlot, mapHeight = 3000):
   canvas.set_font_size(50)
   canvas.move_to((mapWidth - 600), 75)
   canvas.show_text("Map created by Steve (sjr86)")
+  canvas.move_to((mapWidth - 600), 125)
+  canvas.show_text(f"Produced on {todayFormat}")
   return (surface, canvas, mapFactor, minLat, maxLong, mapWidth)
 
 def plotKey(canvas, surface, keyFile, position):
@@ -39,17 +44,17 @@ def plotKey(canvas, surface, keyFile, position):
   keyWidth = keyToPlot.get_width()
   keyHeight = keyToPlot.get_height()
   if position == "TopRight":
-    xLocation = width - 542
+    xLocation = width - keyWidth - 25
     yLocation = 225
   elif position == "TopLeft":
     xLocation = 25
     yLocation = 225
   elif position == "BottomRight":
-    xLocation = width - 542
-    yLocation = height - 460
+    xLocation = width - keyWidth - 25
+    yLocation = height - keyHeight - 25
   elif position == "BottomLeft":
     xLocation = 25
-    yLocation = height - 460
+    yLocation = height - keyHeight - 25
   
   canvas.set_source_surface(keyToPlot, xLocation, yLocation)
   canvas.paint()
