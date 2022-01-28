@@ -18,6 +18,19 @@ def getNeighbourhoods(headers):
             neighbourhoods = json.loads(requests.get('https://api.upland.me/neighborhood', headers=headers).text)
     return neighbourhoods
 
+def getCities(headers):
+    # function returns all neighbourhoods as dictionary
+    try:
+        cities = json.loads(requests.get('https://api.upland.me/city', headers=headers).text)
+    except:
+        try:
+            sleep(1)
+            cities = json.loads(requests.get('https://api.upland.me/city', headers=headers).text)
+        except:
+            sleep(10)
+            cities = json.loads(requests.get('https://api.upland.me/city', headers=headers).text)
+    return cities
+
 def getNeighbourhood(headers, searchCity, searchNeighbourhood = None):
     # function returns specific neighbourhoods as list based on a search city and search neighbourhood
     result = []
@@ -67,6 +80,14 @@ def getNeighbourhoodProperties(headers, searchCity, searchNeighbourhood = None, 
         properties.append(checkInNeighbourhood(neighbourhoodPoly, getProperties(headers, neighbourhoodPoly, models)))
     return properties
 
+def getNeighbourhoodSends(headers, searchCity, searchNeighbourhood = None):
+    # returns list of lists (one per neighbourhood) of sends
+    neighbourhoodPolys = getNeighbourhoodPoly(headers, searchCity, searchNeighbourhood)
+    sends = []
+    for neighbourhoodPoly in neighbourhoodPolys:
+        sends.append(getSends(headers, neighbourhoodPoly))
+    return sends
+
 def checkInNeighbourhood(searchPoly, properties):
     try:
         properties[:] = [x for x in properties if Point(float(x['centerlng']), float(x['centerlat'])).within(searchPoly)]
@@ -75,7 +96,6 @@ def checkInNeighbourhood(searchPoly, properties):
     return properties
 
 def getProperties(headers, searchPoly, models = False):
-    properties = []
     north = searchPoly.bounds[3]
     south = searchPoly.bounds[1]
     east = searchPoly.bounds[2]
@@ -113,6 +133,33 @@ def getProperties(headers, searchPoly, models = False):
     except:
         uniqueProps = getProperties(headers, searchPoly, models)
     return uniqueProps
+
+def getSends(headers, searchPoly):
+    north = searchPoly.bounds[3]
+    south = searchPoly.bounds[1]
+    east = searchPoly.bounds[2]
+    west = searchPoly.bounds[0]
+    step = 1
+    maxStepSize = 0.01
+    runFlag = True
+    while runFlag:
+        sends = []
+        for nsstep in range(0, step):
+            for ewstep in range(0, step):
+                try:
+                    tempSends = json.loads(requests.get('https://treasures.upland.me/sends/discovery?north=' + str(north - ((north-south)/step)*nsstep) + '&south=' + str(north - ((north-south)/step)*(nsstep+1)) + '&east=' + str(east - ((east-west)/step)*ewstep) + '&west=' + str(east - ((east-west)/step)*(ewstep+1)) + '&marker=true', headers=headers).text)
+                except:
+                    try:
+                        sleep(1)
+                        tempSends = json.loads(requests.get('https://treasures.upland.me/sends/discovery?north=' + str(north - ((north-south)/step)*nsstep) + '&south=' + str(north - ((north-south)/step)*(nsstep+1)) + '&east=' + str(east - ((east-west)/step)*ewstep) + '&west=' + str(east - ((east-west)/step)*(ewstep+1)) + '&marker=true', headers=headers).text)
+                    except:
+                        sleep(10)
+                        tempSends = json.loads(requests.get('https://treasures.upland.me/sends/discovery?north=' + str(north - ((north-south)/step)*nsstep) + '&south=' + str(north - ((north-south)/step)*(nsstep+1)) + '&east=' + str(east - ((east-west)/step)*ewstep) + '&west=' + str(east - ((east-west)/step)*(ewstep+1)) + '&marker=true', headers=headers).text)
+                sends.extend(tempSends)
+        if (((north-south)/step) < (maxStepSize) or len(sends) != 0):
+            runFlag = False
+        step = step*2
+    return sends
 
 def getPropertyDetails(headers, propID):
     # retrieves specific property details from Upland API
