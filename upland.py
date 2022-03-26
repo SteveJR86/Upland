@@ -32,7 +32,8 @@ def getCities(headers):
     cities = [  {'name': 'Detroit', 'id': 33}, 
                 {'name': 'Los Angeles', 'id': 32},
                 {'name': 'Kansas City', 'id': 14},
-                {'name': 'Nashville', 'id': 16}]
+                {'name': 'Nashville', 'id': 16},
+                {'name': 'Oakland', 'id': 7}]
 
     return cities
 
