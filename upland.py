@@ -20,20 +20,20 @@ def getNeighbourhoods(headers):
 
 def getCities(headers):
     # function returns all neighbourhoods as dictionary
-    # try:
-    #     cities = json.loads(requests.get('https://api.upland.me/city', headers=headers).text)
-    # except:
-    #     try:
-    #         sleep(1)
-    #         cities = json.loads(requests.get('https://api.upland.me/city', headers=headers).text)
-    #     except:
-    #         sleep(10)
-    #         cities = json.loads(requests.get('https://api.upland.me/city', headers=headers).text)
-    cities = [  {'name': 'Detroit', 'id': 33}, 
-                {'name': 'Los Angeles', 'id': 32},
-                {'name': 'Kansas City', 'id': 14},
-                {'name': 'Nashville', 'id': 16},
-                {'name': 'Oakland', 'id': 7}]
+    try:
+        cities = json.loads(requests.get('https://api.upland.me/feature/city', headers=headers).text)['cities']
+    except:
+        try:
+            sleep(1)
+            cities = json.loads(requests.get('https://api.upland.me/feature/city', headers=headers).text)['cities']
+        except:
+            sleep(10)
+            cities = json.loads(requests.get('https://api.upland.me/feature/city', headers=headers).text)['cities']
+    # cities = [  {'name': 'Detroit', 'id': 33}, 
+    #             {'name': 'Los Angeles', 'id': 32},
+    #             {'name': 'Kansas City', 'id': 14},
+    #             {'name': 'Nashville', 'id': 16},
+    #             {'name': 'Oakland', 'id': 7}]
 
     return cities
 
@@ -47,8 +47,8 @@ def getNeighbourhood(headers, searchCity, searchNeighbourhood = None):
     searchCity = searchCity.title()
     cities = getCities(headers)
     for city in cities:
-        if searchCity == city['name']:
-            cityID = city['id']
+        if searchCity == city['city_name']:
+            cityID = city['city_id']
             break
     neighbourhoods = getNeighbourhoods(headers)
     for neighbourhood in neighbourhoods:
