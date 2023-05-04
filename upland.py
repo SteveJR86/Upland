@@ -145,14 +145,14 @@ def getSends(headers, searchPoly):
         for nsstep in range(0, step):
             for ewstep in range(0, step):
                 try:
-                    tempSends = json.loads(requests.get('https://treasures.upland.me/sends/discovery?north=' + str(north - ((north-south)/step)*nsstep) + '&south=' + str(north - ((north-south)/step)*(nsstep+1)) + '&east=' + str(east - ((east-west)/step)*ewstep) + '&west=' + str(east - ((east-west)/step)*(ewstep+1)) + '&marker=true', headers=headers).text)
+                    tempSends = json.loads(requests.get('https://api.prod.upland.me/treasures/sends/discovery?north=' + str(north - ((north-south)/step)*nsstep) + '&south=' + str(north - ((north-south)/step)*(nsstep+1)) + '&east=' + str(east - ((east-west)/step)*ewstep) + '&west=' + str(east - ((east-west)/step)*(ewstep+1)), headers=headers).text)
                 except:
                     try:
                         sleep(1)
-                        tempSends = json.loads(requests.get('https://treasures.upland.me/sends/discovery?north=' + str(north - ((north-south)/step)*nsstep) + '&south=' + str(north - ((north-south)/step)*(nsstep+1)) + '&east=' + str(east - ((east-west)/step)*ewstep) + '&west=' + str(east - ((east-west)/step)*(ewstep+1)) + '&marker=true', headers=headers).text)
+                        tempSends = json.loads(requests.get('https://api.prod.upland.me/treasures/sends/discovery?north=' + str(north - ((north-south)/step)*nsstep) + '&south=' + str(north - ((north-south)/step)*(nsstep+1)) + '&east=' + str(east - ((east-west)/step)*ewstep) + '&west=' + str(east - ((east-west)/step)*(ewstep+1)), headers=headers).text)
                     except:
                         sleep(10)
-                        tempSends = json.loads(requests.get('https://treasures.upland.me/sends/discovery?north=' + str(north - ((north-south)/step)*nsstep) + '&south=' + str(north - ((north-south)/step)*(nsstep+1)) + '&east=' + str(east - ((east-west)/step)*ewstep) + '&west=' + str(east - ((east-west)/step)*(ewstep+1)) + '&marker=true', headers=headers).text)
+                        tempSends = json.loads(requests.get('https://api.prod.upland.me/treasures/sends/discovery?north=' + str(north - ((north-south)/step)*nsstep) + '&south=' + str(north - ((north-south)/step)*(nsstep+1)) + '&east=' + str(east - ((east-west)/step)*ewstep) + '&west=' + str(east - ((east-west)/step)*(ewstep+1)), headers=headers).text)
                 sends.extend(tempSends)
         if (((north-south)/step) < (maxStepSize) or len(sends) != 0):
             runFlag = False
